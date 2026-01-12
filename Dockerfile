@@ -43,17 +43,13 @@ while true; do \n\
 done' > /usr/local/bin/polymorph_daemon.sh && \
 chmod +x /usr/local/bin/polymorph_daemon.sh
 
-RUN echo '#!/bin/bash\n\
-/usr/local/bin/polymorph_daemon.sh > /dev/null 2>&1 &\n\
-exec /usr/local/bin/docker-entrypoint.sh "$@"' > /usr/local/bin/entrypoint_wrapper.sh && \
-chmod +x /usr/local/bin/entrypoint_wrapper.sh
-
 COPY . /var/www/html/
 RUN echo "${BUILD_NONCE}" > /var/www/html/nonce.txt && \
     chown -R www-data:www-data /var/www/html && \
     chmod -R 755 /var/www/html
 
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i '2i /usr/local/bin/polymorph_daemon.sh > /dev/null 2>\&1 &' /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
 
-ENTRYPOINT ["/usr/local/bin/entrypoint_wrapper.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
